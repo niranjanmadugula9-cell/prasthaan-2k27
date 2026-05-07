@@ -13,10 +13,10 @@ mongoose.connect('mongodb+srv://niranjansuccess:YOUR_PASSWORD_HERE@cluster0.j9gw
 
 // Define what a "Registration" looks like
 const registrationSchema = new mongoose.Schema({
-  name: String,
-  college: String,
-  event: String,
-  phone: String
+   Full_namename: String,
+  mobile_number: String,
+  email_address: String,
+  password: String
 });
 
 const Registration = mongoose.model('Registration', registrationSchema);
