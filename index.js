@@ -11,29 +11,49 @@ mongoose.connect('mongodb+srv://niranjansuccess:Niranjan21022007@cluster0.j9gwcp
   .catch(err => console.error("Database connection error:", err));
 
 const registrationSchema = new mongoose.Schema({
-   Full_namename: String,
-  mobile_number: String,
+  Full_namename: String,
+  mobile_number: { type: String,unique: true},
   email_address: String,
-  password: String
+  password: String,
+  RegesteredEvents: [Number]
 });
-
-const Registration = mongoose.model('Registration', registrationSchema);
-
-app.get('/', (req, res) => {
-  res.send("Prasthaan 2K27 Backend is Live!");
-});
-
+const User = mongoose.model('User', userSchema);
 app.post('/register', async (req, res) => {
   try {
-    const studentData = new Registration(req.body);
-    await studentData.save(); 
-    res.json({ success: true, message: "Registration Successful! See you at Prasthaan." });
+    const lastUser = await User.findOne().sort({ _id: -1 });
+    const lastNum = lastUser ? parseInt(lastUser.uid.split('-')[1]) : 1000;
+    const newUid = `PR26-${lastNum + 1}`;
+
+    const newUser = new User({ ...req.body, uid: newUid, registeredEvents: [] });
+    await newUser.save();
+    res.json({ success: true, uid: newUid });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server Error. Please try again." });
+    res.status(400).json({ success: false, message: "Mobile number already registered." });
   }
 });
-
+app.post('/login', async (req, res) => {
+  const { mobile, pass } = req.body;
+  try {
+    const user = await User.findOne({ mobile, pass });
+    if (user) {
+      res.json({ success: true, user });
+    } else {
+      res.json({ success: false, message: "Invalid Mobile or Password." });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error." });
+  }
+});
+app.post('/add-event', async (req, res) => {
+  const { uid, eventId } = req.body;
+  try {
+    await User.findOneAndUpdate({ uid }, { $addToSet: { registeredEvents: eventId } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-});
+
